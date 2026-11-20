@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>نظام إدارة النتائج</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+
+<style>
+body {
+    background: #eef2f7;
+    font-family: Arial;
+}
+.card {
+    border-radius: 15px;
+    padding: 25px;
+    margin-top: 30px;
+}
+h1 {
+    color: #174a7e;
+    text-align: center;
+}
+.students-box, .report-box {
+    background: #f8fafc;
+    padding: 15px;
+    border-radius: 10px;
+    margin-top: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+<div class="card shadow">
+
+<h1>نظام إدارة نتائج الطلاب</h1>
+
+<h4 class="mt-4">إضافة طالب جديد</h4>
+
+<label>اسم الطالب</label>
+<input id="studentName" class="form-control mb-3">
+
+<label>درجة المادة الأولى</label>
+<input id="grade1" type="number" class="form-control mb-3">
+
+<label>درجة المادة الثانية</label>
+<input id="grade2" type="number" class="form-control mb-3">
+
+<label>درجة المادة الثالثة</label>
+<input id="grade3" type="number" class="form-control mb-3">
+
+<label>نسبة الحضور</label>
+<input id="attendance" type="number" class="form-control mb-3">
+
+<div id="errorBox" class="text-danger mb-3"></div>
+
+<button id="addStudent" class="btn btn-primary mb-2">
+إضافة طالب
+</button>
+
+<button id="mercyButton" class="btn btn-success mb-3">
+تفعيل لجنة الرأفة
+</button>
+
+<hr>
+
+<h4>قائمة الطلاب</h4>
+<div id="studentsBox" class="students-box">
+لم يتم إضافة طلاب بعد.
+</div>
+
+<hr>
+
+<h4>التقرير النهائي للجنة الرأفة</h4>
+<div id="reportBox" class="report-box">
+لم يتم إنشاء التقرير بعد.
+</div>
+
+</div>
+</div>
+
+<script>
+
+// مصفوفة الطلاب
+let studentsList = [];
+
+// كلاس الطالب
+class Student {
+
+    #grade1;
+    #grade2;
+    #grade3;
+    #attendance;
+
+    constructor(name, grade1, grade2, grade3, attendance) {
+
+        if (!name.trim()) {
+            throw new Error("من فضلك أدخل اسم الطالب");
+        }
+
+        this.name = name;
+
+        this.grade1 = grade1;
+        this.grade2 = grade2;
+        this.grade3 = grade3;
+        this.attendance = attendance;
+    }
+
+    set grade1(value) {
+        if (value === "" || !Number.isFinite(Number(value)) ||
+            Number(value) < 0 || Number(value) > 100) {
+            throw new Error("درجة المادة الأولى يجب أن تكون من 0 إلى 100");
+        }
+        this.#grade1 = Number(value);
+    }
+
+    set grade2(value) {
+        if (value === "" || !Number.isFinite(Number(value)) ||
+            Number(value) < 0 || Number(value) > 100) {
+            throw new Error("درجة المادة الثانية يجب أن تكون من 0 إلى 100");
+        }
+        this.#grade2 = Number(value);
+    }
+
+    set grade3(value) {
+        if (value === "" || !Number.isFinite(Number(value)) ||
+            Number(value) < 0 || Number(value) > 100) {
+            throw new Error("درجة المادة الثالثة يجب أن تكون من 0 إلى 100");
+        }
+        this.#grade3 = Number(value);
+    }
+
+    set attendance(value) {
+        if (value === "" || !Number.isFinite(Number(value)) ||
+            Number(value) < 0 || Number(value) > 100) {
+            throw new Error("نسبة الحضور يجب أن تكون من 0 إلى 100");
+        }
+        this.#attendance = Number(value);
+    }
+
+    get grade1() {
+        return this.#grade1;
+    }
+
+    get grade2() {
+        return this.#grade2;
+    }
+
+    get grade3() {
+        return this.#grade3;
+    }
+
+    get attendance() {
+        return this.#attendance;
+    }
+
+    getAverage() {
+        return (this.#grade1 + this.#grade2 + this.#grade3) / 3;
+    }
+}
+
+// عناصر الصفحة
+const studentName = document.getElementById("studentName");
+const grade1 = document.getElementById("grade1");
+const grade2 = document.getElementById("grade2");
+const grade3 = document.getElementById("grade3");
+const attendance = document.getElementById("attendance");
+
+const addStudent = document.getElementById("addStudent");
+const mercyButton = document.getElementById("mercyButton");
+
+const errorBox = document.getElementById("errorBox");
+const studentsBox = document.getElementById("studentsBox");
+const reportBox = document.getElementById("reportBox");
+
+// إضافة طالب
+addStudent.onclick = function() {
+
+    try {
+
+        errorBox.textContent = "";
+
+        const student = new Student(
+            studentName.value,
+            grade1.value,
+            grade2.value,
+            grade3.value,
+            attendance.value
+        );
+
+        studentsList.push(student);
+
+        studentsBox.innerHTML = "";
+
+        studentsList.forEach(function(student, index) {
+
+            let p = document.createElement("p");
+
+            p.textContent =
+                (index + 1) + " - " +
+                student.name +
+                " | المتوسط: " +
+                student.getAverage().toFixed(2) +
+                " | الحضور: " +
+                student.attendance + "%";
+
+            studentsBox.appendChild(p);
+        });
+
+        studentName.value = "";
+        grade1.value = "";
+        grade2.value = "";
+        grade3.value = "";
+        attendance.value = "";
+
+        reportBox.textContent = "تمت إضافة طالب جديد. حدّث التقرير.";
+
+    } catch(error) {
+
+        errorBox.textContent = error.message;
+
+    }
+};
+
+// لجنة الرأفة
+mercyButton.onclick = function() {
+
+    const strugglingStudents = studentsList.filter(function(student) {
+
+        return student.getAverage() >= 40 &&
+               student.getAverage() <= 49;
+
+    });
+
+    const updatedStudents = strugglingStudents.map(function(student) {
+
+        return {
+            name: student.name,
+            newAverage: student.getAverage() + 5
+        };
+
+    });
+
+    const total = updatedStudents.reduce(function(sum, student) {
+
+        return sum + student.newAverage;
+
+    }, 0);
+
+    let generalAverage = 0;
+
+    if (updatedStudents.length > 0) {
+        generalAverage = total / updatedStudents.length;
+    }
+
+    if (updatedStudents.length === 0) {
+
+        reportBox.innerHTML = `
+            <h5>تقرير لجنة الرأفة</h5>
+            <p>عدد الطلاب المتعثرين: 0</p>
+            <p>لا يوجد طلاب متوسط درجاتهم بين 40 و49.</p>
+        `;
+
+    } else {
+
+        const names = updatedStudents.map(function(student) {
+
+            return `<li>${student.name} - المتوسط بعد الرأفة: ${student.newAverage.toFixed(2)}</li>`;
+
+        }).join("");
+
+        reportBox.innerHTML = `
+            <h5>التقرير النهائي للجنة الرأفة</h5>
+            <p>عدد الطلاب المتعثرين: ${updatedStudents.length}</p>
+            <ul>${names}</ul>
+            <p>المتوسط العام بعد الرأفة:
+            <strong>${generalAverage.toFixed(2)}</strong></p>
+        `;
+    }
+
+};
+
+</script>
+
+</body>
+</html>
